@@ -1,14 +1,14 @@
-import helpers, escape_helpers
+from multiprocessing import Process
 
+from scraper import scrape
 
 @app.route("/")
 def exampleMethod():
-    return escape_helpers.sparql_escape('the man\'s world is "hello world"')
-
-@app.route("/a")
-def exampleMethod2():
-    return "ac"
-
-@app.route("/b")
-def exampleMethod3():
-    return "ac"
+    # Make the scraping asynchronous for not timing out the http-request
+    p = Process(target=scrape) #args=('bob',)
+    p.start()
+    p.join(5) #Wait at most x seconds for the scraper to return, (blocking for x seconds)
+    if p.exitcode == 0:
+        return "successfully scraped"
+    else:
+        return "Scraping still running ..."
