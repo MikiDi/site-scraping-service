@@ -1,11 +1,11 @@
 from multiprocessing import Process
 
-from .scraper import scrape
+from .scraper import run
 
 @app.route("/")
 def exampleMethod():
     # Make the scraping asynchronous for not timing out the http-request
-    p = Process(target=scrape, args=()) #args=('bob',)
+    p = Process(target=run) #args=('bob',)
     p.start()
     p.join(5) #Wait at most x seconds for the scraper to return, (blocking for x seconds)
     if p.exitcode == 0:

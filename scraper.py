@@ -38,7 +38,7 @@ def cleanup(doc): #doc = string
     replace_by=u'', encoding=None)
     return res
 
-def scrape():
+def run():
     # select_query_form = """
     # SELECT ?url WHERE {{
     #     GRAPH <{0}> {{
