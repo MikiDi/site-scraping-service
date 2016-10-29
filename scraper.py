@@ -24,7 +24,7 @@ def scrape(url):
 def get_lang(doc): # Get document language from html "lang"-tag
     try:
         return scrapy.selector.Selector(text=doc).xpath('//html/@lang')\
-            .extract()[0].split('-')[0]
+            .extract()[0].split('-')[0].lower()
     except Exception as e:
         return None
 
@@ -60,10 +60,9 @@ def scrape():
     #     os.getenv("SITE_PREDICATE"))
 
     try:
-        results = helpers.query(select_query)
+        results = helpers.query(select_query)["results"]["bindings"]
     except Exception as e:
         helpers.log("Querying SPARQL-endpoint failed:\n{}".format(e))
-
 
     for result in results:
         try:
@@ -82,7 +81,6 @@ def scrape():
                 url, os.getenv('CONTENT_PREDICATE'),
                 escape_helpers.sparql_escape(doc_after),
                 '@'+doc_lang if doc_lang else '')
-            helpers.log('inserting:\n{}'.format(insert_query))
             try:
                 helpers.update(insert_query)
             except Exception as e:
