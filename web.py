@@ -1,6 +1,6 @@
 from multiprocessing import Process
 
-from scraper import scrape
+from .scraper import scrape
 
 @app.route("/")
 def exampleMethod():
