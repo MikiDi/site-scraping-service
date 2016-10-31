@@ -18,7 +18,7 @@ def scrape(url):
             '\nError code: {}'.format(url, e.code))
         return None
     except urllib.error.URLError as e:
-        helpers.log('We failed to reach {}.\nReason: {}', url, e.reason)
+        helpers.log('We failed to reach {}.\nReason: {}'.format(url, e.reason))
         return None
 
 def get_lang(doc): # Get document language from html "lang"-tag
