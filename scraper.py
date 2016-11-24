@@ -24,18 +24,26 @@ def scrape(url):
 def get_lang(doc): # Get document language from html "lang"-tag
     try:
         return scrapy.selector.Selector(text=doc).xpath('//html/@lang')\
-            .extract()[0].split('-')[0].lower()
+            .extract()[0].split('-')[0].strip().lower()
+    except Exception as e:
+        return None
+
+def get_encoding(doc): # Get document encoding from html "meta"-tag
+    try:
+        return scrapy.selector.Selector(text=doc).xpath('//meta/@encoding')\
+            .extract()[0].strip().lower()
     except Exception as e:
         return None
 
 def cleanup(doc): #doc = string
     #https://github.com/scrapy/w3lib/blob/master/w3lib/html.py
-    res = w3lib.html.remove_tags_with_content(doc, ('script', 'style'))
+    enc = get_encoding(doc) if get_encoding(doc) else 'utf-8'
+    res = w3lib.html.remove_tags_with_content(doc, ('script', 'style'), encoding=enc)
     res = html.parser.HTMLParser().unescape(res) # stuff like "&amp;"
-    res = w3lib.html.replace_tags(res, u' ') # Replace every tag with a space
-    res = w3lib.html.remove_comments(res)
+    res = w3lib.html.replace_tags(res, u' ', encoding=enc) # Replace every tag with a space
+    res = w3lib.html.remove_comments(res, encoding=enc)
     res = w3lib.html.replace_escape_chars(res, which_ones=('\n', '\t', '\r'), \
-    replace_by=u'', encoding=None)
+    replace_by=u'', encoding=enc)
     return res
 
 def run():
