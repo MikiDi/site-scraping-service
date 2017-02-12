@@ -9,10 +9,29 @@ import scrapy.selector
 
 import helpers, escape_helpers
 
+def get_encoding(doc): # Get document encoding from html "meta"-tag
+    try:
+        return scrapy.selector.Selector(text=doc).xpath('//meta/@charset')\
+            .extract()[0].strip()# html5
+    except Exception as e:
+        try:
+            content = scrapy.selector.Selector(text=doc).xpath('//meta[@http-equiv="Content-Type"]/@content')\
+                .extract()[0].strip()# html4
+            for frag in content.split(';'): # http://stackoverflow.com/questions/4352468/how-to-get-http-equivs-in-python
+                s = frag.strip().lower()
+                i = s.find('charset=')
+                if i > -1:
+                    return frag[i+8:] # 8 == len('charset=')
+        except Exception:
+            return None
+
 def scrape(url):
     try:
         response = urllib.request.urlopen(url)
-        return response.read().decode('utf-8')
+        encoded_res = response.read()
+        enc = get_encoding(encoded_res) if get_encoding(encoded_res) else 'utf-8'
+        helpers.log('Determined encoding: {}'.format(enc))
+        return encoded_res.decode(enc)
     except urllib.error.HTTPError as e:
         helpers.log('The server at {} couldn\'t fulfill the request.' +
             '\nError code: {}'.format(url, e.code))
@@ -28,22 +47,14 @@ def get_lang(doc): # Get document language from html "lang"-tag
     except Exception as e:
         return None
 
-def get_encoding(doc): # Get document encoding from html "meta"-tag
-    try:
-        return scrapy.selector.Selector(text=doc).xpath('//meta/@encoding')\
-            .extract()[0].strip().lower()
-    except Exception as e:
-        return None
-
 def cleanup(doc): #doc = string
     #https://github.com/scrapy/w3lib/blob/master/w3lib/html.py
-    enc = get_encoding(doc) if get_encoding(doc) else 'utf-8'
-    res = w3lib.html.remove_tags_with_content(doc, ('script', 'style'), encoding=enc)
+    res = w3lib.html.remove_tags_with_content(doc, ('script', 'style'))
     res = html.parser.HTMLParser().unescape(res) # stuff like "&amp;"
-    res = w3lib.html.replace_tags(res, u' ', encoding=enc) # Replace every tag with a space
-    res = w3lib.html.remove_comments(res, encoding=enc)
+    res = w3lib.html.replace_tags(res, ' ') # Replace every tag with a space
+    res = w3lib.html.remove_comments(res)
     res = w3lib.html.replace_escape_chars(res, which_ones=('\n', '\t', '\r'), \
-    replace_by=u'', encoding=enc)
+    replace_by='')
     return res
 
 def run():
